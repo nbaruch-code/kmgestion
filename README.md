@@ -14,7 +14,6 @@ Refonte du site [www.kmgestion.fr](https://www.kmgestion.fr/accueil) (Kelly Mull
 
 ## À compléter
 
-- Photo de Kelly Muller (page « Qui suis-je ? »)
 - Avis clients
 - Logos des outils numériques
 - Version adaptée aux contraintes de Google Sites, si la cliente reste sur cet outil
