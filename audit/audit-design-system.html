@@ -135,6 +135,25 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
 .actions b{font-family:var(--f-display)}
 .actions p{color:var(--muted);font-size:.93rem;margin-top:.2rem}
 .note{background:var(--tint);border-radius:10px;padding:1rem 1.1rem;font-size:.95rem}
+.p-axe{background:var(--tint);color:var(--navy)}
+.impact{display:grid;gap:.8rem}
+.impact-h{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.impact-h h3{font-size:1.1rem}
+.impact-h small{color:var(--muted);font-size:.88rem}
+.dot{width:.8rem;height:.8rem;border-radius:50%;flex:none}
+.dot.bad{background:var(--bad)}.dot.warn{background:var(--warn)}.dot.low{background:var(--ok)}
+.finds{display:grid;gap:.7rem;list-style:none;margin:0;padding:0}
+.find{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:1rem 1.1rem;display:grid;gap:.45rem;min-width:0}
+.find.bad{border-left:4px solid var(--bad)}.find.warn{border-left:4px solid var(--warn)}.find.low{border-left:4px solid var(--ok)}
+.find header{display:flex;flex-wrap:wrap;gap:.5rem;align-items:baseline}
+.find header b{font-family:var(--f-display);font-size:1rem;flex:1 1 16rem;min-width:0}
+.find .where{font-size:.82rem;color:var(--muted)}
+.find p{font-size:.93rem}
+.find p.fix{color:var(--muted)}
+.find p.fix::before{content:"Piste : ";font-weight:700;color:var(--fg)}
+.good{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.8rem}
+.good div{background:var(--ok-bg);border-radius:10px;padding:.9rem 1rem;font-size:.93rem;min-width:0}
+.good b{display:block;font-family:var(--f-display);color:var(--ok);margin-bottom:.2rem}
 footer.f{border-top:1px solid var(--line);color:var(--muted);font-size:.82rem}
 footer.f .in{max-width:1120px;margin:0 auto;padding-block:1.5rem 2.5rem}
 </style>
@@ -147,7 +166,7 @@ footer.f .in{max-width:1120px;margin:0 auto;padding-block:1.5rem 2.5rem}
       <span class="kicker">Refonte du site · État des lieux</span>
       <h1>Audit du design de la maquette</h1>
     </div>
-    <p class="intro">Ce document recense les couleurs, tailles de titres, espacements, boutons et cartes utilisés dans la maquette du nouveau site, et signale ce qui est incohérent. Rien n'a encore été corrigé : c'est la base pour décider des règles à fixer.</p>
+    <p class="intro">Ce document recense les couleurs, tailles de titres, espacements, boutons et cartes utilisés dans la maquette du nouveau site, et signale ce qui est incohérent. Il se termine par une critique du point de vue du visiteur (lisibilité, hiérarchie, cohérence). Rien n'a encore été corrigé : c'est la base pour décider des règles à fixer.</p>
     <div class="summary">
       <div><b>4</b><span>pages auditées</span></div>
       <div><b>24</b><span>points relevés</span></div>
@@ -166,7 +185,8 @@ footer.f .in{max-width:1120px;margin:0 auto;padding-block:1.5rem 2.5rem}
     <a href="#espacements">4. Espacements</a>
     <a href="#boutons">5. Boutons</a>
     <a href="#cartes">6. Cartes et étiquettes</a>
-    <a href="#actions">7. Actions prioritaires</a>
+    <a href="#critique">7. Critique visiteur</a>
+    <a href="#actions">8. Actions prioritaires</a>
   </nav>
 
   <main>
@@ -322,15 +342,68 @@ footer.f .in{max-width:1120px;margin:0 auto;padding-block:1.5rem 2.5rem}
       </ul>
     </section>
 
+    <section id="critique">
+      <h2><span class="n">07</span>Critique du point de vue du visiteur</h2>
+      <p class="lede">Lisibilité, hiérarchie et cohérence des 4 pages, sur ordinateur et sur mobile. Les remarques sont classées selon leur effet sur la personne qui visite le site, de la plus gênante à la moins visible.</p>
+      <p class="note"><b>En résumé :</b> on comprend tout de suite qui est KM Gestion et ce qu'elle propose. Le principal défaut est que ce qui doit pousser à contacter Kelly arrive trop tard ou se lit mal : boutons sous la ligne de flottaison sur mobile, téléphone absent de l'accueil, champs du formulaire presque invisibles, avis clients vides.</p>
+
+      <div class="impact">
+        <div class="impact-h"><span class="dot bad"></span><h3>Impact fort</h3><small>Le visiteur peut partir ou mal comprendre</small></div>
+        <ol class="finds">
+          <li class="find bad"><header><b>Boutons d'appel invisibles au premier écran sur mobile</b><span class="pill p-axe">Hiérarchie</span></header><span class="where">Accueil · mobile</span><p>L'en-tête (logo et menu sur 2 lignes, environ 170px) et le bandeau photo (190px) prennent près de la moitié de l'écran. Le titre commence au milieu, et « Parlons de vos besoins » n'apparaît qu'en faisant défiler. Sur un ordinateur portable de 800px de haut, les boutons passent aussi sous la ligne.</p><p class="fix">réduire le menu mobile à un bouton « Menu » et abaisser le bandeau sur mobile, ou le placer après le titre.</p></li>
+          <li class="find bad"><header><b>Champs du formulaire presque invisibles</b><span class="pill p-axe">Lisibilité</span></header><span class="where">Contact</span><p>Les bordures sont à 1,21:1 sur le fond. Le visiteur voit des libellés suivis de zones vides et ne sait pas clairement où écrire. C'est justement l'étape qui doit transformer la visite en contact.</p><p class="fix">bordures plus foncées (3:1 au minimum), voire un fond blanc dans les champs.</p></li>
+          <li class="find bad"><header><b>Le relevé d'heures peut être lu comme un prix</b><span class="pill p-axe">Hiérarchie</span></header><span class="where">Accueil</span><p>« 250,00 € HT » est le chiffre le plus gras du haut de page, et l'étiquette « Exemple » est minuscule. Un visiteur pressé peut retenir « c'est 250 € ». Sur mobile, le relevé arrive après les chiffres clés et perd son lien avec le texte.</p><p class="fix">grossir la mention d'exemple, l'intituler « Exemple : 5 h déléguées dans le mois », ou atténuer le montant.</p></li>
+          <li class="find bad"><header><b>Pas de téléphone avant la page Contact</b><span class="pill p-axe">Hiérarchie</span></header><span class="where">Toutes les pages</span><p>La cible (artisans, petites entreprises autour de Grasse) appelle volontiers. Le numéro n'est que dans le pied de page et sur la page Contact.</p><p class="fix">afficher le 06 25 55 43 63 dans l'en-tête ou dans le bandeau « En savoir plus ».</p></li>
+          <li class="find bad"><header><b>Aucune preuve sociale</b><span class="pill p-axe">Hiérarchie</span></header><span class="where">Qui suis-je ? · Accueil</span><p>La section « Avis clients » montre un texte d'attente, et rien ne vient rassurer sur l'accueil. Pour confier sa compta ou ses salariés à une indépendante, la confiance est décisive.</p><p class="fix">intégrer 2 ou 3 vrais avis, dont un dès l'accueil.</p></li>
+          <li class="find bad"><header><b>Badge « Le plus choisi » à faire valider</b><span class="pill p-axe">Cohérence du contenu</span></header><span class="where">Prestations · Tarifs</span><p>Ce n'est pas une information donnée par la cliente. Si elle est fausse, elle peut entamer la crédibilité.</p><p class="fix">faire valider par Kelly Muller ou remplacer par « Sur devis ».</p></li>
+        </ol>
+      </div>
+
+      <div class="impact">
+        <div class="impact-h"><span class="dot warn"></span><h3>Impact moyen</h3><small>Le visiteur fait un effort inutile</small></div>
+        <ol class="finds">
+          <li class="find warn"><header><b>Signes dorés énigmatiques devant les arguments</b><span class="pill p-axe">Lisibilité</span><span class="pill p-axe">Hiérarchie</span></header><span class="where">Accueil · « Pourquoi KM Gestion »</span><p>L'œil voit « 12 », « 0 », « h », « IA », « € » avant les titres, mais « h » et « 0 » ne veulent rien dire seuls. Il faut lire le texte pour comprendre le signe, ce qui inverse l'ordre de lecture.</p><p class="fix">des icônes comme pour les services, ou seulement les chiffres parlants.</p></li>
+          <li class="find warn"><header><b>Numérotation trompeuse 01 à 04</b><span class="pill p-axe">Hiérarchie</span></header><span class="where">Qui suis-je ? · Engagements</span><p>La numérotation laisse croire à des étapes, alors que les 4 engagements n'ont pas d'ordre et que les vraies étapes ont un autre style sur l'accueil.</p><p class="fix">réserver les numéros aux étapes, utiliser des icônes pour les engagements.</p></li>
+          <li class="find warn"><header><b>Page actuelle et bouton devis se confondent</b><span class="pill p-axe">Hiérarchie</span></header><span class="where">En-tête</span><p>La page actuelle est une pastille or pâle, et le bouton « Demander un devis » une pastille or juste à côté. On distingue mal « où je suis » de « ce que je peux faire ».</p><p class="fix">signaler la page actuelle par un soulignement et garder l'or plein pour le bouton seul.</p></li>
+          <li class="find warn"><header><b>Six libellés pour une seule action</b><span class="pill p-axe">Cohérence</span></header><span class="where">Toutes les pages</span><p>Le visiteur rencontre « Parlons de vos besoins », « Me contacter », « Demander un devis », « Demander une intervention », « Obtenir mon devis gratuit » et « Envoyer ma demande ». Il peut croire à des démarches différentes.</p><p class="fix">deux libellés au plus : « Demander un devis gratuit » pour l'action principale, « Appeler » pour l'action secondaire.</p></li>
+          <li class="find warn"><header><b>Listes de prestations en deux colonnes</b><span class="pill p-axe">Lisibilité</span></header><span class="where">Prestations</span><p>Sur ordinateur, les éléments s'enchaînent de gauche à droite puis à la ligne : le regard zigzague.</p><p class="fix">une seule colonne par prestation, ou des sous-groupes titrés.</p></li>
+          <li class="find warn"><header><b>En-têtes de section éclatés sur ordinateur</b><span class="pill p-axe">Hiérarchie</span></header><span class="where">Toutes les sections</span><p>Le titre est à gauche et le paragraphe à droite, calé en bas. Quand le titre fait 4 lignes, le paragraphe flotte loin de lui et un vide se crée.</p><p class="fix">placer le paragraphe sous le titre, ou l'aligner en haut.</p></li>
+          <li class="find warn"><header><b>Relevé incliné, en police mono</b><span class="pill p-axe">Lisibilité</span></header><span class="where">Accueil</span><p>La rotation et la police à chasse fixe ralentissent la lecture, et certaines lignes se coupent (« Saisie des factures / fournisseurs »).</p><p class="fix">réduire l'inclinaison sur mobile et raccourcir les intitulés.</p></li>
+          <li class="find warn"><header><b>Contour de focus peu visible et cibles tactiles trop petites</b><span class="pill p-axe">Lisibilité</span></header><span class="where">Tout le site · menu mobile · bouton « Copier »</span><p>Au clavier, on perd la trace de l'élément actif (contour à 2,24:1). Au doigt, le menu mobile (environ 36px) et le bouton « Copier » (environ 26px) font rater des clics.</p><p class="fix">contour bleu marine, cibles de 44px minimum.</p></li>
+        </ol>
+      </div>
+
+      <div class="impact">
+        <div class="impact-h"><span class="dot low"></span><h3>Impact faible</h3><small>Finitions perçues inconsciemment</small></div>
+        <ol class="finds">
+          <li class="find low"><header><b>Le site est plus « corporate » que le logo</b><span class="pill p-axe">Cohérence</span></header><span class="where">Global</span><p>Le logo est manuscrit, avec une plume, chaleureux. Le reste du site est très géométrique : léger décalage de ton.</p><p class="fix">reprendre un détail du logo, comme la plume ou un filet doré, dans les en-têtes de page.</p></li>
+          <li class="find low"><header><b>Bandeau photo sur l'accueil seulement</b><span class="pill p-axe">Cohérence</span></header><span class="where">Prestations · Qui suis-je ? · Contact</span><p>Les autres pages paraissent plus froides, avec leur simple aplat bleu pâle.</p><p class="fix">une fine bande de la même photo, ou aucune photo nulle part.</p></li>
+          <li class="find low"><header><b>Tailles de titres variables, deux ors et deux bleus</b><span class="pill p-axe">Cohérence</span></header><span class="where">Global</span><p>La différence ne se voit pas consciemment, mais elle rend l'ensemble moins net. L'or des boutons est un peu plus vif que celui du logo, juste à côté. Voir les sections 1 et 3.</p><p class="fix">une taille par niveau de titre, couleurs calées sur le logo.</p></li>
+          <li class="find low"><header><b>Gris secondaire très présent</b><span class="pill p-axe">Lisibilité</span></header><span class="where">Descriptions · pied de page</span><p>Les contrastes sont conformes, mais beaucoup de texte est gris et petit : la page paraît pâle sur un écran lumineux.</p><p class="fix">passer les descriptions de services en couleur de texte principale.</p></li>
+        </ol>
+      </div>
+
+      <h3>Ce qui fonctionne bien</h3>
+      <div class="good">
+        <div><b>Proposition de valeur</b>« Déléguez votre administratif. Gardez votre temps pour votre métier. » Claire, orientée vers le bénéfice.</div>
+        <div><b>Transparence</b>Tarif horaire, rayon de 15 km et 12 ans d'expérience visibles dès le haut de page.</div>
+        <div><b>Structure</b>5 services en grille sur l'accueil, détaillés ensuite sur la page Prestations.</div>
+        <div><b>Photo</b>Nette et professionnelle, avec une légende claire : le site devient humain.</div>
+        <div><b>Mobile</b>Une colonne, aucun débordement, texte à 16px avec un interligne confortable.</div>
+        <div><b>Contrastes</b>Textes principaux et boutons dorés conformes partout.</div>
+      </div>
+    </section>
+
     <section id="actions">
-      <h2><span class="n">07</span>Actions prioritaires</h2>
+      <h2><span class="n">08</span>Actions prioritaires</h2>
+      <p class="lede">Elles combinent l'audit technique (sections 1 à 6) et la critique du point de vue du visiteur (section 7), par ordre de gain pour le visiteur.</p>
       <ol class="actions">
-        <li><div><b>Accessibilité</b><p>Rendre visibles les bordures des champs et le contour de focus (au moins 3:1), et porter le bouton du menu mobile et le bouton « Copier » à 44px de haut.</p></div></li>
-        <li><div><b>Échelle typographique</b><p>Une seule taille par niveau de titre, un seul style de petit titre en capitales, 5 ou 6 tailles de texte au maximum.</p></div></li>
-        <li><div><b>Couleurs</b><p>Fusionner les doublons, créer les variables « texte sur or » et « ombre », et caler l'or et le bleu sur ceux du logo.</p></div></li>
-        <li><div><b>Boutons</b><p>Intégrer le bouton du menu au système de boutons (en petite taille), définir les états survol, appui et désactivé, et harmoniser les libellés d'appel au contact.</p></div></li>
-        <li><div><b>Espacements</b><p>Adopter une échelle de 8 valeurs et supprimer les 10 styles écrits directement dans les balises.</p></div></li>
-        <li><div><b>Nettoyage</b><p>Retirer le code et les couleurs qui ne servent plus.</p></div></li>
+        <li><div><b>Faire remonter l'action au premier écran</b><p>Menu mobile repliable, bandeau réduit sur mobile, téléphone visible dans l'en-tête.</p></div></li>
+        <li><div><b>Rendre le formulaire et le relevé lisibles</b><p>Bordures de champs et contour de focus à 3:1 au moins, cibles tactiles de 44px, mention « Exemple » explicite sur le relevé d'heures.</p></div></li>
+        <li><div><b>Installer la confiance</b><p>2 ou 3 vrais avis clients, dont un sur l'accueil, et validation par Kelly Muller des affirmations comme « Le plus choisi ».</p></div></li>
+        <li><div><b>Unifier les appels à l'action</b><p>Deux libellés au plus, page actuelle du menu distincte du bouton devis, bouton du menu intégré au système de boutons avec ses états survol, appui et désactivé.</p></div></li>
+        <li><div><b>Fixer les règles visuelles</b><p>Une taille par niveau de titre, couleurs calées sur le logo, doublons fusionnés, icônes pour les arguments, numéros réservés aux étapes.</p></div></li>
+        <li><div><b>Espacements et nettoyage</b><p>Échelle de 8 valeurs, suppression des 10 styles écrits dans les balises et du code qui ne sert plus.</p></div></li>
       </ol>
       <p class="note"><b>Si le site reste sur Google Sites :</b> cet audit sert de cahier des charges pour régler le thème, soit 2 couleurs de marque, 3 tailles de titres et 1 style de bouton.</p>
     </section>
