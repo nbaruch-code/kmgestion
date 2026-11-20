@@ -1,0 +1,341 @@
+<title>Audit design KM Gestion</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout : rapport en une colonne de lecture, sommaire collant à gauche sur grand écran, échantillons visuels réels (pastilles, titres, boutons) à côté des constats. */
+:root{
+  --bg:#f7f8fa; --surface:#ffffff; --fg:#1c2430; --muted:#5a6676; --line:#dfe3ea;
+  --brand-gold:#d4a72c; --gold-ink:#8a6810; --gold-soft:#f3e6c2; --navy:#1f3a5f; --tint:#edf2f8;
+  --ok:#1f7a4d; --ok-bg:#e3f3ea; --warn:#8a5a00; --warn-bg:#fbefd5; --bad:#b3261e; --bad-bg:#fbe5e3;
+  --f-display:"Montserrat",system-ui,sans-serif; --f-body:"Manrope",system-ui,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1722; --surface:#172231; --fg:#e7ecf3; --muted:#9aa7b8; --line:#2a3748;
+  --gold-ink:#e2b94a; --gold-soft:#3a3019; --navy:#9fbbe0; --tint:#13253d;
+  --ok:#7fd3a6; --ok-bg:#16392a; --warn:#f0c46b; --warn-bg:#3b2e12; --bad:#ff9d94; --bad-bg:#45201d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1722; --surface:#172231; --fg:#e7ecf3; --muted:#9aa7b8; --line:#2a3748;
+  --gold-ink:#e2b94a; --gold-soft:#3a3019; --navy:#9fbbe0; --tint:#13253d;
+  --ok:#7fd3a6; --ok-bg:#16392a; --warn:#f0c46b; --warn-bg:#3b2e12; --bad:#ff9d94; --bad-bg:#45201d; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 var(--f-body);-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--f-display);line-height:1.2;text-wrap:balance;margin:0}
+p{margin:0}
+code{font:500 .86em var(--f-mono);background:var(--tint);padding:.1em .35em;border-radius:4px;overflow-wrap:anywhere}
+a{color:var(--navy)}
+:focus-visible{outline:3px solid var(--navy);outline-offset:3px}
+
+.gutter{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top{background:var(--surface);border-bottom:1px solid var(--line)}
+.top .in{max-width:1120px;margin:0 auto;padding-block:2.5rem 2rem;display:grid;gap:1.5rem}
+.logo{height:52px;width:auto;max-width:100%}
+.logo-d{display:none}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .logo-l{display:none}:root:not([data-theme="light"]) .logo-d{display:block}}
+:root[data-theme="dark"] .logo-l{display:none}:root[data-theme="dark"] .logo-d{display:block}
+.kicker{font:700 .75rem/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--gold-ink)}
+.top h1{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800;margin-top:.5rem}
+.top .intro{color:var(--muted);max-width:44em;font-size:1.05rem}
+
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.summary div{background:var(--surface);padding:1.1rem 1.2rem;min-width:0}
+.summary b{display:block;font:800 1.8rem/1.1 var(--f-display);font-variant-numeric:tabular-nums}
+.summary span{font-size:.85rem;color:var(--muted)}
+.score b{color:var(--warn)}
+.bar{height:6px;border-radius:3px;background:var(--line);margin-top:.6rem;overflow:hidden}
+.bar i{display:block;height:100%;width:62%;background:var(--brand-gold)}
+
+.layout{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:200px minmax(0,1fr);gap:3rem;padding-block:2.5rem 4rem}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 1.5rem);align-self:start;display:grid;gap:.15rem;font-size:.9rem}
+nav.toc a{text-decoration:none;color:var(--muted);padding:.4rem .6rem;border-radius:6px}
+nav.toc a:hover{color:var(--fg);background:var(--surface)}
+@media (max-width:860px){.layout{grid-template-columns:1fr;gap:1.5rem}nav.toc{position:static;display:flex;flex-wrap:wrap;gap:.4rem}nav.toc a{border:1px solid var(--line);background:var(--surface)}}
+
+main{display:grid;gap:3.5rem;min-width:0}
+section{display:grid;gap:1.25rem;min-width:0;scroll-margin-top:1rem}
+section>h2{font-size:1.5rem;display:flex;align-items:baseline;gap:.7rem}
+section>h2 .n{font:500 .85rem var(--f-mono);color:var(--muted)}
+h3{font-size:1.05rem}
+.lede{color:var(--muted);max-width:46em}
+
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{text-align:left;padding:.7rem .9rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:700 .72rem/1.2 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--bg)}
+tr:last-child td{border-bottom:0}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.pill{display:inline-block;font:700 .72rem/1 var(--f-display);padding:.35rem .55rem;border-radius:999px;white-space:nowrap}
+.p-ok{background:var(--ok-bg);color:var(--ok)}
+.p-warn{background:var(--warn-bg);color:var(--warn)}
+.p-bad{background:var(--bad-bg);color:var(--bad)}
+
+/* nuancier : les pastilles montrent les couleurs réelles de la maquette, fixes quel que soit le thème */
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.9rem}
+.sw{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;min-width:0}
+.sw .chip{height:64px;border-bottom:1px solid var(--line);position:relative}
+.sw .meta{padding:.6rem .75rem;display:grid;gap:.15rem}
+.sw b{font:600 .85rem var(--f-mono)}
+.sw small{color:var(--muted);font-size:.78rem}
+.sw.flag{border-color:var(--bad)}
+.sw.flag .chip::after{content:"inutilisé";position:absolute;top:.45rem;right:.45rem;font:700 .65rem var(--f-display);background:var(--surface);color:var(--bad);padding:.2rem .4rem;border-radius:4px}
+.sw.dup{border-color:var(--warn)}
+.sw.dup .chip::after{content:"doublon";position:absolute;top:.45rem;right:.45rem;font:700 .65rem var(--f-display);background:var(--surface);color:var(--warn);padding:.2rem .4rem;border-radius:4px}
+
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media (max-width:620px){.pair{grid-template-columns:1fr}}
+.cmp{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.cmp div{flex:1;padding:2.2rem .8rem .7rem;font:600 .8rem var(--f-mono);min-width:0}
+.cmp div span{display:block;font:500 .72rem var(--f-body);opacity:.85}
+
+.contrast{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.9rem}
+.ct{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface);display:grid}
+.ct .demo{height:84px;display:grid;place-items:center;padding:.8rem}
+.ct .info{padding:.7rem .85rem;display:flex;justify-content:space-between;align-items:center;gap:.6rem;border-top:1px solid var(--line)}
+.ct .info small{color:var(--muted);font-size:.8rem}
+.ct .info b{font:700 1rem var(--f-display);font-variant-numeric:tabular-nums}
+
+.specimen{border:1px solid var(--line);border-radius:10px;background:var(--surface);display:grid}
+.spec-row{display:grid;grid-template-columns:150px minmax(0,1fr);gap:1rem;align-items:baseline;padding:.9rem 1rem;border-bottom:1px solid var(--line)}
+.spec-row:last-child{border-bottom:0}
+.spec-row code{justify-self:start}
+.spec-row .s{font-family:var(--f-display);font-weight:700;line-height:1.15;overflow-wrap:anywhere;min-width:0}
+.spec-group{font:700 .72rem var(--f-display);letter-spacing:.1em;text-transform:uppercase;padding:.6rem 1rem;background:var(--bg);border-bottom:1px solid var(--line);color:var(--muted);display:flex;justify-content:space-between;gap:.5rem}
+@media (max-width:560px){.spec-row{grid-template-columns:1fr;gap:.35rem}}
+
+.scale{display:flex;flex-wrap:wrap;gap:.35rem;align-items:flex-end}
+.scale span{background:var(--gold-soft);border-radius:3px;font:500 .68rem var(--f-mono);display:grid;place-items:end center;padding-bottom:.2rem;min-width:2.2rem;color:var(--fg)}
+
+/* reproductions des composants de la maquette, avec leurs vraies valeurs */
+.demo-row{display:flex;flex-wrap:wrap;gap:1.2rem;align-items:center;padding:1.4rem;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.dbtn{display:inline-flex;align-items:center;font-family:var(--f-display);font-weight:700;text-decoration:none;border-radius:999px;border:2px solid transparent;white-space:nowrap}
+.dbtn.gold{background:#d4a72c;color:#1c2430;font-size:.9rem;padding:.95rem 1.4rem}
+.dbtn.ghost{border-color:currentColor;color:var(--fg);font-size:.9rem;padding:.95rem 1.4rem}
+.dbtn.nav{background:#d4a72c;color:#1c2430;font-size:.82rem;padding:.55rem .7rem;border:0;font-weight:600}
+.dbtn.copy{font-size:.75rem;padding:.35rem .6rem;border:1px solid var(--line);background:var(--bg);color:var(--fg);font-weight:600}
+.lab{display:grid;gap:.45rem;justify-items:start}
+.lab small{font-size:.75rem;color:var(--muted)}
+
+.tags{display:flex;flex-wrap:wrap;gap:1rem;align-items:center}
+.t1{font:600 .85rem/1 var(--f-display);padding:.7rem 1rem;border:1px solid var(--line);border-radius:999px;background:var(--bg)}
+.t2{font:600 .85rem/1 var(--f-display);padding:.7rem 1rem;border-radius:8px;background:var(--gold-soft)}
+.t3{font:600 .7rem/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;background:var(--gold-soft);padding:.45rem .7rem;border-radius:999px}
+.t4{font:400 .7rem var(--f-mono);background:var(--gold-soft);padding:.2rem .5rem;border-radius:4px}
+
+.radii{display:flex;flex-wrap:wrap;gap:1rem}
+.radii div{width:76px;height:56px;border:2px solid var(--navy);display:grid;place-items:center;font:500 .72rem var(--f-mono);background:var(--tint)}
+.radii div.x{border-style:dashed;opacity:.6}
+
+.list{margin:0;padding-left:1.2rem;display:grid;gap:.45rem}
+.actions{counter-reset:a;display:grid;gap:.9rem;list-style:none;margin:0;padding:0}
+.actions li{counter-increment:a;display:grid;grid-template-columns:2.4rem minmax(0,1fr);gap:.8rem;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:1rem 1.1rem}
+.actions li::before{content:counter(a);font:800 1.4rem/1 var(--f-display);color:var(--gold-ink)}
+.actions b{font-family:var(--f-display)}
+.actions p{color:var(--muted);font-size:.93rem;margin-top:.2rem}
+.note{background:var(--tint);border-radius:10px;padding:1rem 1.1rem;font-size:.95rem}
+footer.f{border-top:1px solid var(--line);color:var(--muted);font-size:.82rem}
+footer.f .in{max-width:1120px;margin:0 auto;padding-block:1.5rem 2.5rem}
+</style>
+
+<header class="top gutter">
+  <div class="in">
+    <img class="logo logo-l" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAX4AAACrCAMAAABWgAfmAAAAkFBMVEUAAAAXO2DEnzT5+PjRsVAoSnDSt2PfzJl1dXVdcI9QaIepqq3q36mzs2iTnrAYHmz39Hjtq2K0sx9eYKi0axDSt2cgbG39/QHcx4tzhp3awnZ/fwBCW33awnZ2h5/5r6pgqqr/AABkcpLpqSWutsTf2tH/f3+xstAAAP99BAD9fAGJlqt/f/++mCrgw2nIpjOQe/qdAAAAMHRSTlMA/f0O6vikWQKm1wwgA18EBAYEBgNpBAGSl5cC52hsBwQBbAVQSgIpAQIClAL35qkcWM4/AAAjeElEQVR42u1diUIbvc410exLMjNZSYAQdmgL7/92V/IqeyY08AEtvfH/335tEhIiy0fS0WIh/tnV1G3bzehvS/wfAFRpukrYWlX0KC39E7O2A3Fc/31B2V3rvwGg9NMkwjUaRXLp/0TqUVwvL8kqVbuQHYX3X2XfSp1HbV8lKOlEAIp5Pk9XUUSaDlFCggbahWQ+nwvaFfzfc/SCe0A/1x7PwPtXLUU/V1q+jkZzSEYk1ipa4587ka5AzPBfo5HahnWU0o5U5wltQrqh99jVRzm+T/WfBJwTqCSp1HL8A5Ue5Z1Ga7U1ZBbwXyhpIR/GZ5O1/ulkhPYgndO21MujMN8ufUECTc4rEOcoV5FEUvotPjoXyrBmzUakIzoQsw0+nwh8lqxFSyCVoj0Yqa0R9RGD3ir9DawVpqC8U/kHSb/BvUjF0oITIlOFaLQkeYsZvryjjUOQkvbgWiIX4dVxA94g+kZALdYSU+oW4Ry1ndwaECWegrnUcXzVjJT8HMQ1vX5dSenjKiUeIVSpf1aJ2oDmKNcD3R2p2PPRFgWL2jyPgKCFpH9nLbL8M5Wq3zBDrf6LOJRK0H/K6p3yVQmgjqI9QPg1eTvkVM5JoBn+JVW+pdR9ITZKzB05OghOJrzaMe2Wet816hnYqRNQic1Rugf4mihWFHUUIfBsUPzVCqOtxErfriqifdl6D9XdbLN5AsIs5u2Uj/KgzMVsdxTwq6p/jb4mwnYEiDgWTfAEkPQrb5dSrvp0aLpA+9E21NrgNhUCz2qUiGMM8BvVRy1dQzoi6GnFfCWexBJlDKndDCVaFP+5MCZ42z6q59J5gijzXHlibuU/AM3x/Cj+15Z018nXTJ4RetoNROdawrjuzEnwIgMor7WvlK6fyTkiAq6iV+EGreaa/QHpCll/9biGVokGluC8IzcHdi3+x1rLNjMSh0pIBG9ws5pWCRdD3ShZpVXFnPsSyOEZERdEsl8d/f7XV4PGFOPWGXowL6NUNDtyeQK0aB7heaVPRCYj3PRFshJc8F3bNs1TPbNq/5ICd0yPa8jqLim82lViuREUZ0nlb4PXPKJDBM3SUKGVYoSkcK+rumkAXVZnjVP2dHt3FPErwn98RNwHUn0CGNhVS+nv++saHVB8VkjQIRcpWkt3aLat60z9JAl8Ne+qbk7Qo2T/eGQcfgf7KLpIeyagLCQq/yr1fP1acm/V9klrdiL3pyuVcLuG3qRKVCZmZJ4+yv63CyPYJEkjWOrItUGAQeWvMFL1Qq0UXSGZA1hHmsq8Nm4oJQCeQNOktyBu5RNP1dHZ+S3wzCRH9qyiohotMPEzqPz4/zx2lcZBbgL6M1vC/XUK0gu6AxkuCLGp0A9dRRKRNt32KNtDPB7EFFTnaL6spPOPNgCdSlT0KIXaM7sofTAMsgIgEOXmsWka8nGihH4eTchcVGV1hJwDpY9QgqImWmGprKcMeCMUKDjth2s6DJTqlTmAWdMQyQCGiHicSWIzucUXiNBhOq69qxIyhwXRaAWd3I1zyfasElHxMJWSimRuZfaQEujNdU1IA2L9stKx7fkKNxFfcGQ232B0oxElSuhPaWbRCNsAyUofVT0dSd5AeTh6zdoKYX+EzyTJNZDPsz7mVd7G8qBzjv48UZpLBdcoYyXAxpjO5lqYhPpjWwrj65zL188ErKiugf6PmIXrI+gfuog2RpXGUBdwE1qJRYT4ngQJkwjzU6HInh1BTy1PQ7IGG9+u5rQds6Pw34A8aZQQsQ8AqaQpUXyJL34m/EfcpZUKc9s7oPNASi8DWyAyX4hjYeGbrO4tWl3id/ijUcIdl1oLH2ReawnSQVURFbEOzytV0kCvmHVH0H+bx4m6CxgjkdgUNfCAKMQ4/kb5+efg6EqQNBvuAKidSaFavbwkR7V/M/ATPVYh9jxx7ieNro3jeDdThVak+WDxSu9AKirCpfRZw/+xmPPtZhfSAGtkVYnKaMGMsumy0IqTZqDDrZRe1TyK2+e07h6PoP/WlVF0iwJOuaElqkdZ3lbIUrVbIUQoWqjUhtWPstbk6Oe/R/l3qPwtYY9giRDJ63TW4srkrdoOeJq5Q7DrGgU9ZBc2R81/D/YkZGNTr/iDyIc1wjiBPtEHAHOx5n7ojCBe8/vidhQdTe77VrmsZJgLfoRFRKdsYYl8yZb4VKIcTnT/I1J6HQwcTe57VL8SyUDRE4lfgr4UfgtQtp20qrhTa5lTl0QDupoUcuHfZ0fcf/siT7MyHo5gxrVdts9AFjcdog/Q4ZS58/mtihiOtQvv5Rqeide0FceGIG7I8VkhsqDww8IE6Dq1BXPbNHFM4r6X6RlRx8SW6TX9uaWOIGVOWZowK8sSIKOm0Wqryqokr3wk1961ZhhZpREj1sodAdHdjvLtqkeue+3nQTa5HBNa71vXKP2tiFy18bKldNcG9f0W7WlfrasK3Koq5RMdo9z3Uw1bsU1G5yZYrSXP0FBdz2iUiplfntCI1bNqoyZeU/61EkGh/3Eduu4ky9DKfG6j5SvJB0nv3FIzqK/ZlAlISParVUqLuLej6r9zNTNN77vhC9SIZRMq2uHv7nyPFFKi+aN5qmocjnJ834InYtQ8bC83VMp5LhMqhP+pKgW3TUCzLWwlxQnzNZWdl9VRjO83u4kBncZiexKlNqECO9VbVBm1ly1y7bbVDmdyrCF5/6pE9exX7G9nsmVxbjh92UFE+S35sjvRmPLwrqtlMcTuCPvvBv4NGdlrB0Wk0ppbMy2HHchaq1Srv6wo1L0TqhrrKMb/BD0W+I3w16w6hLBmUzc1b/8kMHqmmn3apm9tdWG7rfc2tu4+u+XV+vfyJDwpwSbMj0QX9FkWye5EZeSsWhar+UqGw994PlKjI/mheneQbVLiU9tvsg5s+0SnuYPE9/IBUlO9XJuOdGKm8ZFbKuP5vrpfSl4Lw5YB8Mxq62R8qvIj9JDHTx3OUK0xyqoGWGUqYlBNiDK3uJSdFNQlJL6x1d3IhhBZCNk7wtdCFemNPhVb2w2Fu9VWfRqNn0Lhb5reHhEmpVTzpvrhavlIgtL/xgRnI2TgjuuXLmoSgXGTT64/Vfkj1acod5rIHR9MtHAfJEYuyRtNzEnFUHj1JqKBDTT8O4iWlZIvcSfgjVWhwUPuuU91+Ykq07LXg5F8GRkGGepWdJXkeV5WuGTua3ZwixZkE/rP4u9xeHZgJTxKfaJc9jWY9esz3GooK1l7iQKnuWz4MUmqnXim/pVpmrBLnddIlewfPonnQXBC6W9YW3Svf1nlD/ybVsw/WPxlta3l6jbCkDfSpYkSEakUrRrecA5GFUBPExBdKSlp9D9BHpWRatc6PKWL73SVxycnxdVfswWdSKyEkzBL1LInP0X7KxQrIsg6vT3XfVlPWzkYQyWtuMcjqxieqgbMkFTK6lbi+nB3H/W+OJErvv9LkgKZ2I89vvhHHzLxA9C9neNKEl2mtkqr21T6XSRfXQUOG9L4BDL5kRtI1reyUdQcFpleSZLV23iGichPtPjHYvpXiL8W5yNneMNvw8Ufif8c+VZUnfb8/Kwmu6zTtgLQ8xwljDCyXpYn63x7A5JontsRDJLhf/MQkp8CYiP+H4H4s4VYwB/HnsCILZfAxf/fVV/ykmDo4nQuu/tfhFeRBuoEzGYq1rtTsXiqunblOKRaUWxp174pEnHK3xP/5E/5PRx7mof6lWfXH8CmywpxjK+Tl5EarCDURCPc5TlzdVpzAFR8m8lnQFXypKtKVTefv9EW4Zc5OxkGn4mAXOR/gDFtfb8Hwt+44srf/ffd3oCZLJ6YWVJi1mKwS6XgFD01okJXcnMHiDw0nk2lVGqZxgJJSShHCa30G7FwIsbxHvHjM/FJnEP2Z7Gn68fDI2aXP6BoD6U7n6e3dpu7rQyvtjP8JMlvUu8i8Wroeq5pAirYlMrsaSODcLIVKbxdGTKw2HMSl8zzQVCK9Z5kfw57ogrCTOmGQf8IPnbW2WNXN17nhE4qzkw1VarS63JCxvzWjmnQpOebU+rgDC9KmlWjlOJUP3H61eL3Y66+eGE0+mjO4a6r66Ggp5P1DLIVi9oRz8EUNig2UPr5pm/x6R0TMaZifOKWoxan4t5sS/HV2HPNsKdvWmtg2DP/bEK9kfQZDQCIRqtERl3nKtqlfThfo6s6b4TuoXj7WjDsIe230ANCP3ZSwJ/DnlHVCwSfuNdfic8u4oBrO2BNWgAEfVhR/U46H9kQuH2nEjxw7DkptiLLMjqEHJO+WvtLebXDPnBp+OZE8AVjLu+uVUBApoBU397CgjvRdo9d17xbP6fihon/1NrjaXbDHv1a/79m6r2C0LGZMb5tNIfrLzmPdaN2fqsJihTex8//nCwude05/meK/8qZ5b0qp/ScfN/SPgpfy0QsX8Uej4n+wiqOpbyBSHja0L0V+AZcmIJZ3liuszj/cTU1NBwq/9fyQMA8m2jIKxqxmOAPdOpAVW2rsrl7j/aDuCpt4Xl5IU6Z8nsrLtQTcf7V1EPLBJz0sCfjyp9+q0YpdDIFaXghUMNRvvEe0Ut/x8bBiy+eH79k0F+F8p39ceV/98pEGZ/sl/jw+gNZMODY/uA/1Trl/4Wb8526dcjFf6v0T+Kvhv6aY4+4DoNQrvzwnZTfoxf2yLqPR1/O+LQPa4btVUhNjvjRaL6R+PEcjwul/rGH71bSeS5Enhe4YtoK+Yr46/nmaK9fySOC0Up8uwX3p8WJ03BP2VHP9Ytw3d/fXBDlVtx8ecjr0D0Bn76libxM+b9dDdmllO7NBWp4fFbk+XjMxQ9isgiczNvQ9n36msGccflexyDMmPRH6Xfszi99+XJrcGaU6eEBz3xWZvsCtU9dG4cvYWmnV+CQfEPBq4mrpflSiwXX/rx/lh/u/4B/wLDnbh8Th1vzrYYjXA49OBGnzPL+FUUmFZPxuefW+2RP9Z28HlIUGjB2E4r/xOP6/wJ96hyfGTiWHvT8ncAPP7OhGBUfupfcTpyLB9gTCBR/xWF+4m7nHXjRWPRK+v3TmIJyOp1MLw/BF21VJ1MIgQd00pxi2Iw9zqF//Dd0IfHiwjmXcc2BP/kqn/Ny4X6x39Fp2mMHEaAIfqWC1zLYd5p4ecbDwisoF7Smn/T1nZR/eVegZBuf5X+to6tqn4au4IC6rd9mri+lRC+uflzdCGYXH2BAa3CdiuIsLor8xpMk/twZIzLH/Mdy7vf4GwzZor/pzG2dHGCn9VtODj9WnVg5IS/dZVYznt+FV4DfNmI8+Q93gw+/TpGhrcxVYBqf2d6HKfuTSX/MYllemPaT675U8mwI+jHkZRFBNhlGBvyh8Y8cN3o8rEYl/o4T46zCRBx6dJn4kwF8R5muR8NEEGxnvINKtjfPV89r/55bWYx2Pp/PD9d+ynfng/IJKeDglb4qT7x0Fq/Z8cUfdq/B+EoUBTcIuONlrjc5jvObUAfcP0H/C8Z5QZzpwdlK5vVHKTSWaGM8Z8RSACHjeed6viJmOagu/FyP10nYmXrdCImrOKAeL2VJYF7ERc4gHLH9KmDPEOGnBr9y/kTBpLwQV4zW941FrnMxV67faBrsMZ2xsBnp9sp4t6QSV2fxG1lTugHxly1fM+KfMaeHS19W99F1q/qwywmxfd+0Fb7T1BwkfchDQhJF91NcxIYhAMtRGbHYFNWJyRCWPskc37P4a8GCLrW39qPP3EeWg26S2Uum1RmMCwWUhfypcREPGvxXyWYG/QY9oPOlz0Ixdb0neULNgypIG416afhr/+GD7r/1pG9QnUzZvcxX4R8wgb5f49DHvg/fxPiC1w3wAivu92TuDWNwuj/uJwt4SehEKYakqSHzTwpVaj0ccuY7eAkrTHzkYZFY43aFyCHgZ0S/A+7UrvfwAdUR4KSPKDse21pXI01LDk+teuPrnIgKO1PpbGBT+vuWOxxZuHdxUUK2AJantDx1zK2qSaVhbNdTCdz46UFHPgqwo9m5A0GSa4e4f0IkvksuE9zflAPqEnfOI4+vwHmIha27jLVtdZ0pakNyK86sT2nGt5OSf9cpKyx/KN2hiPsVt1N2inCfb2+0chdGlR7YRo8HDuRBMTWPrVT5Ws2RI/FuPmdJSdyWjvlG9i2WnsO6t1umrwVXPAUyLbXrHoMuOkZlWvgajDiAosouYh/7PUHEV9xWTvFDYiccsBh/E/dKPrkJUcSoed8fep/x4+2ZGYLDs0OiOlZiogp8PNxeg1dy1XnMdF/Mv+RZ6UvfWZW9Aaw5/nGpQCTTZcgXwnMTwcK38i3soYmnwrD1HLJPmSuOn/LDPsX2hVkEiz34OYV9DDDiKkuzScZo4Bs7IIv7uTT7G70qfids8hubR44c8yCYf/SSkuYHIx4cbwaOxG/B33X7sGYTpX3CauuD2hXjcZqerLznX3qsmv9B+YDhBaa6ts2Uea+5xqPMhBO5+RULc5ZsfdYYbu2unUx+X60FHvTT5XpesPUEQV7GJQaM9KMkTblFMGYjSrgBeF38U+sQWlP5oIViHGmFLVYFtVwzK2uLPZnDhCC24i1dORdB2dst5vVYVjq7G3MPuF9FoWyRBVE8YNnvxV95Uxw8ki0EbG+vEhOp0TPOH9JvR90RcH6o+J01da9b+GKc0gPoep55L1xYv8iK2WPVUCRQMjnHA7UkU9vTQigvNxFcuecJqzi85y595hVKa1M7vSzL+A3i96GfN4+qfrYgL+P8zpW1ANe1MwnRrT0FFJFFh4GPdTLQvmbO9gVJcWDS1n5Oaf0i5y9qZ1z0pcdMrEd2ek5/GX726W4SMBaqF3UShOi5jMicxY5PDuhSZa7kHFae6j/CK+yQwvsE5M2H3XLtm4FE3ojYQPKq+A2PA1aIhYms5Bp7qjXxPH5AB5ShduFaoUElWdwr7TPO8sY598mBOSuKqpx48cEksBFonxfy34H0S+UwnR1uenlhOYNqOfS+hP6rfX8+0crSBc7OXM0/4rs10JHRGVCdwoDyo67e86Q4CcF1JErlB9GHHh28IRAUPZhhrkrJT9kNc1ON88Q2vjXOkBW/Nhyxjzyl2uIy3ptOgElwHO7KZsBPMfOJNh3sg35PpTufYkjUZaDAKoSivt+/I+0Hz3yegf9pvAsCv5j7aiRucMwPirgU3OvE5+srK5gp014dOrFSnonhlOjHrnJi7jzeIg6dAUXWlYugYqXU7zbZG3bBAFOf9nzE1W07nwvdcvvk5R7bYWdy452KRE+UuuMFFL1MJV0zraYK4PcfUH5lZq1gbqkOxxLJuVb02PjwE+FFxBfUnR5bX3Ia7KdPRzpTTeBUhD5NfFqMZcANTPyTheCmCT8jc+Fj3LM6llYJKlsg7cVIkQbwKPLvQJRXlXlnhE3Z8XZFG407tlvz/oCUcwzSVE2XBdp7Dyx5/ERE2NQ6iPHFhI+EubDorDGbRJgXbq+mGmVu40FYsGAtZGZ4ERj9WL/egY/8rFMvMTHtFbLEgeOTUSCHP3rvqHqIRq8vaqet3et9JW9cfG4pa9b36KjUX9FtcPJ0v0ylxB8Pn9bM4WjuUZkoDs30+kmZqYUeEtRZoP5OqqdeltENN1HlteUkJL5j8MAHsR+FHxqmEDFjnzBQhiq+cQ8Sg/Nr9LsNsIkur72R4lsYKohYGT1f7vY7Po1KI8vBNJZVHyqrdzZ5wb5ZwXw+Jn0ZcMX0FaWc8thXf2t5ldtkdec29hjSDHzOVHo105IcLeMi/TiNg935KUTABzLmmp3lM1ZAWvN+xdfkv7V5mcGqn265GijCzTzo3wRZYDkBL6W5KbaZGd2RsLjEqiGKySU/4ivWgMt8HgU9uFUqjrrNAxbTWN6co8LCWV4ps8lPtyGFPS3aEw5yPCeB4fei5TwIbeTvzCmorU8MyyFq4iWJopCvUXrO8jJ+weFMvAxU6PJ+vLlfNl0rZkMOLHO0bRE6akzf5eg7ZyLjoeyfpoPwIfVfxyVoeRvs8AwvnYnYS84sHK1kDl98ek/1LKdDvRox382FjaCpQ8z7KsVJHER7HE0SlswGn69fK/jp/JK3jr3N0Ag4xnwG0L9Vxwi3teGHvyd+x94UPmFTMJLFT6PHdLylOp+Bi50QjhbOv42D+pKCe++qmkd3ZDAmND47OyvioU48/9d2sZgH/TpcH3vnm1UXImajZ76ZzbR/nvoeZgAmpPxDyeIIlsYeB9DPYw1dOKrgy0H/QA5gbLn+7N5hNPvi7JtPpdhR0mNtAGzwFEv1N+GVSRz0HB8L1zaU/vFKU9JpMQAyGYP+gW9SgOeK3rPAqGUChdrr50LlrQLoT1n2isUOyXCM5kP/tdqXSNRLdfjjASLAz9reiPsyzLyipfZ+QJI9eB5upPR9W41yvZxqkD/z6ku8wVY+SJ3sb0KN83uHi7AY8pVPvbKvMg5Nfq+21juSfMCJypS3XgaSlY64cCCqlmw2TsqMd8srK1ZBCtkOVfMt70/O8LhtYtRwFliK03ysWbWcZMIcSPTmzRv40ZA3R0MyToHjEw8JHxivDMI3JP3ITgcMPf2aif2u4RODGjnX4sml5EfnLIhloMS1/FoI1inMM72pf34sExBWxkytT6IDAk/19xCoRvpkqtl8HiUkzRbzXS57nmJYBN3vgUfXavKQD6QU+c7x0jp1iov+hMRofzI2EL9np7nyNzZj4De8w+CElK1+PLKTgPeJH1XR8ZMLZxDlNymHKvMRWW9izsA5WkZmQoqBiNflb4z/6Gm/3BJV9RjH/JDAEPRf8tAkjF5C6PEkug67efkEHxJ/sw/LHShxC7v0OmbsyxttdjE8uAvZ9gB8nPJrh8E1SKNyT3ZD0h/HXrzJfPrcRLdBaWEJF8EgB88alLrK03lIMqe/EJfxQC7f/cpsGF+maG4eHRhNdNrfhowwdzNlEpgZ4zRjZto1wPBiqoq/3MYC8KjeldeMGu0Pgl4fFSS9fOLc0PKVEsVYuLwjd0RgyL1diEUccgRQeFyOUQp3SqaWJSQusBT9pLEjF4xO9Md0uGj116tTayWo1IxU5i9eOuzhD/OJ25WtwHmEdW9CtBW/6MUpbrIXeHUFAA9D9UpXtnV6HNb8UOrpdtBN1+YZX7CwWaAiGLWUXU4m1tYS2E9cdAWDZtxS50b6RT/fNHstGci1/1ZS88PTrlzpj+fdbwasOsy09IMePUPCs6o8RMlTrxZ2wXjhga9Cz7OoyASijH8UDpmA79lpHID1VLiKBgsJsLBJ5gvJCg1hPBvRZw4gw8OsX+TwWueQT5hlbIyqVzKeWTmv/Mm3DPpbU7q46rdqOIeSCabkbRBUCzvx6pjKsHvhpwjqasFUfFuS04pfuNw7msrTfomozb0JXuvM1F3VnZrNYG6n3UvEnkulFIqzlUFg2BjASpvXy25/UYO6wCAdnHbFXtf4l3zw+hVpaTZW97mDxMqITUgOC+H3AJXCj7lCanQSPG8Jl8yYSMII/RKbm/FOlMngeEVyVs3u3e7m3u/sG1QH/dpamS0famBtYbW/axGC0Xob7zA4M93uDD8U+RYB/PeG1hynYGYHI3xlTmUqf9HCT+QFzrdHpdPm9JxzHSnY9CS5ruCn87OgHFFMsqm/jzEsLo0bcOadK8fsCL9eKKCvdAHk4HQsh+5kecuwAmLNHJ8ZB5MXfqtLY98k8Zoixa0T/6y5mzkwS30Xd8n8PGMjdHXzmfmGQ2X2k0zeyk49QXAREMQ2CzC10DuxnhSFAAupjd7bqhopfx/lplHHF+Q8mGWuKc8QuSpEfDgjeWosyr36Ddt/ArwK6m5v1IXqWnrQz0CGYc+KYw/nslceiToPrUzmVRKf/vghdIDzw1TVGJEw0biUnYCxLfEDz/gC5dhzxwBYV+rGyxS7rNn9OGCU9StFUHPFspb5cNOq3BXzAcPz0BuWInwJsafepRz6d61X2lwOVWk1fAdb3p5xXrXnLja47nmMN15m1XJWNz7rgtLlwJCr8XjT3Kg88RD5sDLLqJnHRD8mV1bSp3l/sNKZq5EDuM+D5M7UJds4qDNSkMZT5vGrdebe9LyHTuxjgySNuY8dcv6lz9ltfcaaHaTrfrHVUK8KBmF5aE395qP4rCiKMyeZGzF5GHMsB7goGBI/DE62ws+B/owlRsMVRRw6VIxY89Mn9ye99hzS/cFiK85prgLtB/8al9pnh7ohasEjQYPih2HqM6Bjw9YQvz2xUH5isXf8GogFZJ4tNYI702QLTytaNb0Av5pOUa8iH/wQ072noT/uRSDxIDn6u9LmKBji441vU44OMChvODOwZwTcTkRDVeaDY/jKXkudQMcR+i2F5cBGKUmPpe+fDSn4mRXaz97u0S6DJCv8dtbJ0D6btjpXFoc/zmmqKZwOv//AYlUmv1Q+ZZgKlQP0veZT9lpW4xC4rnWvfkvegbCv2DEPVcZrkiDp6m9+XwwMw0MVVr5FOegkZUOtXca0QnCZBdF54ueiv1O5K2Qz7MaV71D233+8d2RKK/aXf5ccOlL6pxF/lHgvNQ6OLMhaBhZ1HgLP3v4uoEI/44fI8zrlZce5kS4bleGG40n8cGWc+R6h6QRO7kbqxbnpEqULW8juxvHZ2FBsQUev4JKULNUAroBfE5/Da5Xl+y+Cqr1xAnQB652QNxfMIbzHF4Qa797/AK/BjtoAXr/MEi7kPMGrMQhfH2my3SXz7sRtbn1F/Io3+PpLGCg1MOp36bOipj5LSnrqegngQuTyw00Dn+zSlQOeT2Q/O1M71IwiFwP141PFPMn0QDHeM9GpZ1wj8MtwdjAKxnri9qg7fPs3dSjRD/TtPukR/HSHuhC/uRtuIdwFovc8Iiqc6ts6VZBt7kV+Ifcqg6GUiywPgXC2BQHpmDY6HwNPVma9v8jPuRlfnF6N78H79VF0N/ewr1NBhSExjYCYwEFNRarKYdgl9ecrDcyUQbl37fAwfb4lv51rkmkcmMJPIXLerD7tcVX7/6WQhDQ8zi9ADFAtPDkSSE5Myn3vPKA7v71q8PKV53g6RLMKg1yzG9lcd9Vyz07u3eNa3qD+eOA9Ew+yAK/0+bargTucTMn4pHwY7FEd+iuTs8SM7JCu23K6yLLL3iuz8pXvnA1ubg/6xb6h5MHdjYeJ7sPWtDcN5s03Wurdmf7Fc//4jLyRX4TWeXc3Lr/2SywC5y3+vld/v7K82yoCv7N+7e7Gz10wCR33/I9doviZy6sJj8L054ENiR8v/R63HP8V0+4+fPFMeHBbSMOaUgKP9JMXG6cUF++H/m+wdryGMAp2ZjUaHGz42Yu5PGeWu/k/gP5on08Uzb/wqgrGmBRQxkM9Cv/KqlguMBT/zKvLr77qV2IuzxmIH0M9Cv/M6jw+LPIPhkj+gOWdsOsqwaay/5p77D96JfumvcDBkxg+dvE8aQbxv+z1i6CjFLzk+R/Q/oUnfcfaF+IfFb/HxHvX83rFncvqD0g/M6SxV0jwLwVdc9PQq298ZuuacQ5z8RW3Y7JaB6n77t7c8T8J/SC2koinG3BFyNXfsZKeL7mvgjWvS+m7mabxN7um6i1bkOpr6ruQRual5KvPd/yzCfc4Sz5JpoB/Vfha5kPXr3o3J6fi0b2k6j4Bi9y8zFix5FNdSh+fiH93QV1Xe7Pwa55ppzvRq6qefRb0jONgnsxQhff/0drxdBcl0s2O3b5lGvzBK7fAv1DXUFjoF/9o0PWbFcwuoVGRqUjkOPjmg+/PKXszjtjYHvgn/c5DXKPhST+/ouqDxZ/ZtHqsc4TW6x9sIvr/WNUe+Sfw9NEf1Rt5ZwvBxT+Z6TpoUTNKfwOS6uP1MQ59fIj/6aDrUPxX/Si/9C3V0gh/+C1vYIdoOmMwfuP9D/8o/tOczdVIRcfRSDlAH637brDsqWnFXJ7GbxjA/i8fAMo0QoVuTyWr/2bbT/T6f1gf37RZ5//Pyq82wFEOs/YzVNFNTLLih/hvuk70L4iOccEnKaITvxa2Q6ODbh84rg8Tv8R+d7NW8X8O/V+xpj3wGRyUc1yfsyzWaPGzMTIXR+z5AvCxk2G19l/9vxM+X7x8v99hDyyOsvkCz6pgE3BKgDgcS35cn7gmlvFUNymcxgNjro/r810fyDKYsilRR+X/Cuyxc14uaNIpG1N0+a9+5f8Bl9K0Izz4e+cAAAAASUVORK5CYII=" alt="KM Gestion">
+    <img class="logo logo-d" src="data:image/png;base64,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" alt="KM Gestion">
+    <div>
+      <span class="kicker">Refonte du site · État des lieux</span>
+      <h1>Audit du design de la maquette</h1>
+    </div>
+    <p class="intro">Ce document recense les couleurs, tailles de titres, espacements, boutons et cartes utilisés dans la maquette du nouveau site, et signale ce qui est incohérent. Rien n'a encore été corrigé : c'est la base pour décider des règles à fixer.</p>
+    <div class="summary">
+      <div><b>4</b><span>pages auditées</span></div>
+      <div><b>24</b><span>points relevés</span></div>
+      <div><b>2</b><span>problèmes d'accessibilité bloquants</span></div>
+      <div class="score"><b>62/100</b><span>cohérence globale</span><div class="bar"><i></i></div></div>
+    </div>
+  </div>
+</header>
+
+<div class="gutter">
+<div class="layout">
+  <nav class="toc" aria-label="Sommaire">
+    <a href="#couleurs">1. Couleurs</a>
+    <a href="#contrastes">2. Contrastes</a>
+    <a href="#typo">3. Typographie</a>
+    <a href="#espacements">4. Espacements</a>
+    <a href="#boutons">5. Boutons</a>
+    <a href="#cartes">6. Cartes et étiquettes</a>
+    <a href="#actions">7. Actions prioritaires</a>
+  </nav>
+
+  <main>
+    <section id="couleurs">
+      <h2><span class="n">01</span>Couleurs</h2>
+      <p class="lede">13 couleurs sont déclarées comme variables. Deux ne servent nulle part, deux font doublon, et trois valeurs sont recopiées en dur dans le code.</p>
+      <div class="swatches">
+        <div class="sw"><div class="chip" style="background:#d4a72c"></div><div class="meta"><b>#D4A72C</b><small>Or · boutons, filets · 9×</small></div></div>
+        <div class="sw"><div class="chip" style="background:#8a6810"></div><div class="meta"><b>#8A6810</b><small>Or foncé · textes dorés · 7×</small></div></div>
+        <div class="sw"><div class="chip" style="background:#f3e6c2"></div><div class="meta"><b>#F3E6C2</b><small>Or pâle · fonds · 6×</small></div></div>
+        <div class="sw"><div class="chip" style="background:#1c2430"></div><div class="meta"><b>#1C2430</b><small>Texte principal · 14×</small></div></div>
+        <div class="sw dup"><div class="chip" style="background:#1c2430"></div><div class="meta"><b>#1C2430</b><small>« on-navy » · 3× · identique au texte</small></div></div>
+        <div class="sw"><div class="chip" style="background:#5a6676"></div><div class="meta"><b>#5A6676</b><small>Texte secondaire · 15×</small></div></div>
+        <div class="sw dup"><div class="chip" style="background:#4f5d70"></div><div class="meta"><b>#4F5D70</b><small>« on-navy-muted » · 4×</small></div></div>
+        <div class="sw"><div class="chip" style="background:#f7f8fa"></div><div class="meta"><b>#F7F8FA</b><small>Fond de page · 4×</small></div></div>
+        <div class="sw"><div class="chip" style="background:#ffffff"></div><div class="meta"><b>#FFFFFF</b><small>Cartes, en-tête · 8×</small></div></div>
+        <div class="sw"><div class="chip" style="background:#edf2f8"></div><div class="meta"><b>#EDF2F8</b><small>Bleu pâle des en-têtes · 3×</small></div></div>
+        <div class="sw"><div class="chip" style="background:#dfe3ea"></div><div class="meta"><b>#DFE3EA</b><small>Bordures · 19×</small></div></div>
+        <div class="sw flag"><div class="chip" style="background:#1f3a5f"></div><div class="meta"><b>#1F3A5F</b><small>Bleu marine · 0×</small></div></div>
+        <div class="sw flag"><div class="chip" style="background:#152a46"></div><div class="meta"><b>#152A46</b><small>Marine foncé · 0×</small></div></div>
+      </div>
+
+      <h3>Couleurs du logo et couleurs du site : deux ors, deux bleus</h3>
+      <p class="lede">Les couleurs du site viennent de l'ancien Google Site. Celles du logo, fourni ensuite, sont légèrement différentes. À l'écran, on obtient deux teintes presque identiques pour chaque couleur de marque.</p>
+      <div class="pair">
+        <div class="cmp"><div style="background:#c29d35;color:#1c2430">#C29D35<span>Or du logo</span></div><div style="background:#d4a72c;color:#1c2430">#D4A72C<span>Or du site</span></div></div>
+        <div class="cmp"><div style="background:#193d61;color:#fff">#193D61<span>Bleu du logo</span></div><div style="background:#1f3a5f;color:#fff">#1F3A5F<span>Bleu du site</span></div></div>
+      </div>
+
+      <h3>Valeurs écrites en dur</h3>
+      <div class="tw"><table>
+        <thead><tr><th>Valeur</th><th>Où</th><th>Problème</th></tr></thead>
+        <tbody>
+          <tr><td><code>#1C2430</code></td><td>Texte du bouton doré, bouton « Demander un devis » du menu, ancien carré « KM »</td><td>Même couleur que le texte principal, recopiée 3 fois. Une variable « texte sur or » manque.</td></tr>
+          <tr><td><code>rgba(31,58,95,.35)</code></td><td>Ombre du relevé d'heures</td><td>Bleu marine écrit en dur.</td></tr>
+          <tr><td><code>rgba(31,58,95,.45)</code></td><td>Ombre du portrait</td><td>Même bleu, autre opacité : deux ombres pour un même rôle.</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="contrastes">
+      <h2><span class="n">02</span>Contrastes</h2>
+      <p class="lede">Ratios mesurés selon les règles WCAG 2.1 AA. Un texte doit atteindre 4,5:1 ; une bordure de champ ou un contour de focus, 3:1.</p>
+      <div class="contrast">
+        <div class="ct"><div class="demo" style="background:#f7f8fa"><span style="display:block;width:80%;height:38px;border:1px solid #dfe3ea;border-radius:8px;background:#f7f8fa"></span></div><div class="info"><small>Bordure des champs du formulaire</small><span><b>1,21:1</b> <span class="pill p-bad">Insuffisant</span></span></div></div>
+        <div class="ct"><div class="demo" style="background:#ffffff"><span style="font:700 .9rem var(--f-display);color:#1c2430;padding:.5rem .9rem;outline:3px solid #d4a72c;outline-offset:3px;border-radius:4px">Lien au clavier</span></div><div class="info"><small>Contour de focus doré sur blanc</small><span><b>2,24:1</b> <span class="pill p-bad">Insuffisant</span></span></div></div>
+        <div class="ct"><div class="demo" style="background:#edf2f8"><span style="display:block;width:70%;border-top:3px solid #d4a72c"></span></div><div class="info"><small>Filets dorés sur bleu pâle</small><span><b>1,99:1</b> <span class="pill p-warn">Décoratif</span></span></div></div>
+        <div class="ct"><div class="demo" style="background:#d4a72c"><span style="font:700 .95rem var(--f-display);color:#1c2430">Me contacter</span></div><div class="info"><small>Texte du bouton doré</small><span><b>6,96:1</b> <span class="pill p-ok">Conforme</span></span></div></div>
+        <div class="ct"><div class="demo" style="background:#edf2f8"><span style="font:700 .8rem var(--f-display);letter-spacing:.14em;color:#8a6810">SURTITRE DORÉ</span></div><div class="info"><small>Or foncé sur bleu pâle</small><span><b>4,59:1</b> <span class="pill p-ok">De justesse</span></span></div></div>
+        <div class="ct"><div class="demo" style="background:#f3e6c2"><span style="font:500 .9rem var(--f-body);color:#5a6676">Texte gris sur or pâle</span></div><div class="info"><small>Bandeau « En savoir plus »</small><span><b>4,70:1</b> <span class="pill p-ok">Conforme</span></span></div></div>
+      </div>
+    </section>
+
+    <section id="typo">
+      <h2><span class="n">03</span>Typographie</h2>
+      <p class="lede">Trois polices cohérentes : Montserrat pour les titres, Manrope pour le texte, IBM Plex Mono pour le relevé d'heures. Mais il n'y a pas d'échelle fixe : un même niveau de titre existe en plusieurs tailles.</p>
+      <div class="specimen">
+        <div class="spec-group"><span>Titre H1</span><span class="pill p-warn">2 tailles</span></div>
+        <div class="spec-row"><code>3,4rem max</code><span class="s" style="font-size:clamp(1.6rem,4.6vw,3.4rem);font-weight:800;letter-spacing:-.02em">Déléguez votre administratif</span></div>
+        <div class="spec-row"><code>3rem max</code><span class="s" style="font-size:clamp(1.6rem,4.2vw,3rem);font-weight:800">Parlons de vos besoins</span></div>
+        <div class="spec-group"><span>Titre H2</span><span class="pill p-warn">3 tailles</span></div>
+        <div class="spec-row"><code>2,3rem max</code><span class="s" style="font-size:clamp(1.3rem,3vw,2.3rem)">Comment ça se passe</span></div>
+        <div class="spec-row"><code>2,1rem max</code><span class="s" style="font-size:clamp(1.3rem,3vw,2.1rem)">Vous souhaitez en savoir plus ?</span></div>
+        <div class="spec-row"><code>1,5rem fixe</code><span class="s" style="font-size:1.5rem">Avis clients</span></div>
+        <div class="spec-group"><span>Titre H3</span><span class="pill p-bad">4 tailles</span></div>
+        <div class="spec-row"><code>1,2rem</code><span class="s" style="font-size:1.2rem">Gestion administrative</span></div>
+        <div class="spec-row"><code>1,1rem</code><span class="s" style="font-size:1.1rem">Devis gratuit</span></div>
+        <div class="spec-row"><code>1,05rem</code><span class="s" style="font-size:1.05rem">Zéro contrainte RH</span></div>
+        <div class="spec-row"><code>1,02rem</code><span class="s" style="font-size:1.02rem">Facturation</span></div>
+        <div class="spec-group"><span>Petit titre en capitales</span><span class="pill p-bad">4 styles</span></div>
+        <div class="spec-row"><code>0,75 · 0,14em</code><span class="s" style="font-size:.75rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-ink)">Surtitre de section</span></div>
+        <div class="spec-row"><code>0,75 · 0,12em</code><span class="s" style="font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-ink)">Navigation (pied de page)</span></div>
+        <div class="spec-row"><code>0,72 · 0,12em</code><span class="s" style="font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">Téléphone (contact)</span></div>
+        <div class="spec-row"><code>0,70 · 0,10em</code><span class="s" style="font-size:.7rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase">Sans engagement (badge)</span></div>
+      </div>
+      <h3>11 tailles de texte courant</h3>
+      <div class="scale" aria-label="Tailles de texte relevées, en rem">
+        <span style="height:1.6rem">0,8</span><span style="height:1.7rem">0,84</span><span style="height:1.75rem">0,85</span><span style="height:1.8rem">0,88</span><span style="height:1.85rem">0,9</span><span style="height:1.9rem">0,92</span><span style="height:1.95rem">0,95</span><span style="height:2rem">0,98</span><span style="height:2.15rem">1,05</span><span style="height:2.2rem">1,08</span><span style="height:2.3rem">1,12</span>
+      </div>
+      <p class="lede">Cinq ou six tailles suffiraient. Des écarts de 0,03rem ne se voient pas à l'œil.</p>
+    </section>
+
+    <section id="espacements">
+      <h2><span class="n">04</span>Espacements</h2>
+      <p class="lede">Aucune échelle d'espacement : 23 valeurs différentes, de 0,35rem à 4,5rem, et 10 styles écrits directement dans les balises de la page.</p>
+      <div class="tw"><table>
+        <thead><tr><th>Zone</th><th>Valeurs relevées</th><th>Constat</th></tr></thead>
+        <tbody>
+          <tr><td>Hauteur des sections</td><td class="num">4,5 · 3,5/4,5 · 3,2/3,6 · 3,5 · 3/2 rem</td><td><span class="pill p-warn">5 variantes</span></td></tr>
+          <tr><td>Marge intérieure des cartes</td><td class="num">1,6×1,4 · 2 · 1,8 · 1,4/1,2 rem</td><td><span class="pill p-warn">4 variantes</span></td></tr>
+          <tr><td>Écarts dans les grilles</td><td class="num">1px · 0,6 · 1 · 1,5 · 2 · 2,2×3 · 3 · 3,5 rem</td><td><span class="pill p-warn">8 variantes</span></td></tr>
+          <tr><td>Styles dans les balises</td><td>Marge du titre d'accueil, taille de « Avis clients », largeur du logo du pied, alignement des boutons tarifs…</td><td><span class="pill p-bad">10 cas</span></td></tr>
+        </tbody>
+      </table></div>
+      <p class="note"><b>Échelle conseillée :</b> 0,25 · 0,5 · 0,75 · 1 · 1,5 · 2 · 3 · 4,5 rem (8 valeurs pour tout le site).</p>
+    </section>
+
+    <section id="boutons">
+      <h2><span class="n">05</span>Boutons</h2>
+      <p class="lede">Deux styles de bouton sont bien définis (doré et contour). Deux autres ont été créés à part, avec des tailles trop petites pour un doigt sur mobile.</p>
+      <div class="demo-row">
+        <div class="lab"><span class="dbtn gold">Me contacter</span><small><span class="pill p-ok">Référence</span> environ 48px de haut</small></div>
+        <div class="lab"><span class="dbtn ghost">Voir les tarifs</span><small><span class="pill p-ok">Secondaire</span> environ 48px</small></div>
+        <div class="lab"><span class="dbtn nav">Demander un devis</span><small><span class="pill p-bad">Hors système</span> environ 36px sur mobile</small></div>
+        <div class="lab"><span class="dbtn copy">Copier</span><small><span class="pill p-bad">Hors système</span> environ 26px</small></div>
+      </div>
+      <div class="tw"><table>
+        <thead><tr><th>État</th><th>Présent ?</th><th>Remarque</th></tr></thead>
+        <tbody>
+          <tr><td>Survol</td><td><span class="pill p-warn">Partiel</span></td><td>Léger soulèvement seulement. Une transition de couleur est prévue mais aucune couleur de survol n'existe.</td></tr>
+          <tr><td>Appui</td><td><span class="pill p-bad">Absent</span></td><td>Aucun retour visuel au clic.</td></tr>
+          <tr><td>Désactivé / envoi en cours</td><td><span class="pill p-bad">Absent</span></td><td>« Envoyer ma demande » ne montre pas que l'envoi est en cours.</td></tr>
+          <tr><td>Focus clavier</td><td><span class="pill p-warn">Peu visible</span></td><td>Contour doré à 2,24:1 (voir Contrastes).</td></tr>
+        </tbody>
+      </table></div>
+      <h3>Six libellés pour une seule action : contacter Kelly</h3>
+      <div class="tags">
+        <span class="t1">Parlons de vos besoins</span><span class="t1">Me contacter</span><span class="t1">Demander un devis</span><span class="t1">Demander une intervention</span><span class="t1">Obtenir mon devis gratuit</span><span class="t1">Envoyer ma demande</span>
+      </div>
+      <p class="lede">La variété est en partie voulue, mais « Demander un devis » et « Obtenir mon devis gratuit » se chevauchent.</p>
+    </section>
+
+    <section id="cartes">
+      <h2><span class="n">06</span>Cartes et étiquettes</h2>
+      <h3>Six arrondis de coins, trois suffiraient</h3>
+      <div class="radii">
+        <div style="border-radius:2px">2px</div><div style="border-radius:4px">4px</div><div style="border-radius:8px">8px</div><div class="x" style="border-radius:10px">10px</div><div style="border-radius:14px">14px</div><div style="border-radius:999px">999px</div>
+      </div>
+      <p class="lede">Le 10px (en pointillés) ne sert plus. Proposition : petit (4px), moyen (12px), pastille (999px).</p>
+      <div class="tw"><table>
+        <thead><tr><th>Carte</th><th>Bordure</th><th>Ombre</th><th>Arrondi</th></tr></thead>
+        <tbody>
+          <tr><td>Services</td><td>Grille séparée par des traits de 1px</td><td>—</td><td class="num">14px</td></tr>
+          <tr><td>Tarifs</td><td>1px, ou 2px dorée pour la carte mise en avant</td><td>—</td><td class="num">14px</td></tr>
+          <tr><td>Formulaire</td><td>1px</td><td>—</td><td class="num">14px</td></tr>
+          <tr><td>Avis clients</td><td>1px en pointillés</td><td>—</td><td class="num">14px</td></tr>
+          <tr><td>Relevé d'heures</td><td>1px</td><td><span class="pill p-warn">Ombre A</span></td><td class="num">14px, avec une rotation</td></tr>
+          <tr><td>Portrait</td><td>1px</td><td><span class="pill p-warn">Ombre B</span></td><td class="num">14px</td></tr>
+        </tbody>
+      </table></div>
+      <h3>Quatre styles d'étiquette pour un rôle proche</h3>
+      <div class="demo-row">
+        <div class="lab"><span class="t1">Yooz</span><small>Outils · pastille, bordure</small></div>
+        <div class="lab"><span class="t2">BTS Comptabilité</span><small>Diplômes · arrondi de 8px</small></div>
+        <div class="lab"><span class="t3">Sans engagement</span><small>Badges tarifs · capitales</small></div>
+        <div class="lab"><span class="t4">Exemple</span><small>Relevé · police mono, 4px</small></div>
+      </div>
+      <h3>Code mort</h3>
+      <ul class="list">
+        <li>Les styles de l'ancien carré « KM » et du nom texte de l'en-tête, remplacés par le logo.</li>
+        <li>Un compteur CSS déclaré mais jamais utilisé.</li>
+        <li>Les deux bleus marine, déclarés mais jamais utilisés depuis la version claire.</li>
+      </ul>
+    </section>
+
+    <section id="actions">
+      <h2><span class="n">07</span>Actions prioritaires</h2>
+      <ol class="actions">
+        <li><div><b>Accessibilité</b><p>Rendre visibles les bordures des champs et le contour de focus (au moins 3:1), et porter le bouton du menu mobile et le bouton « Copier » à 44px de haut.</p></div></li>
+        <li><div><b>Échelle typographique</b><p>Une seule taille par niveau de titre, un seul style de petit titre en capitales, 5 ou 6 tailles de texte au maximum.</p></div></li>
+        <li><div><b>Couleurs</b><p>Fusionner les doublons, créer les variables « texte sur or » et « ombre », et caler l'or et le bleu sur ceux du logo.</p></div></li>
+        <li><div><b>Boutons</b><p>Intégrer le bouton du menu au système de boutons (en petite taille), définir les états survol, appui et désactivé, et harmoniser les libellés d'appel au contact.</p></div></li>
+        <li><div><b>Espacements</b><p>Adopter une échelle de 8 valeurs et supprimer les 10 styles écrits directement dans les balises.</p></div></li>
+        <li><div><b>Nettoyage</b><p>Retirer le code et les couleurs qui ne servent plus.</p></div></li>
+      </ol>
+      <p class="note"><b>Si le site reste sur Google Sites :</b> cet audit sert de cahier des charges pour régler le thème, soit 2 couleurs de marque, 3 tailles de titres et 1 style de bouton.</p>
+    </section>
+  </main>
+</div>
+</div>
+
+<footer class="f gutter"><div class="in">KM Gestion · Kelly Muller · Audit réalisé sur la maquette de refonte (4 pages), version du 20 novembre 2026. Ratios de contraste calculés selon WCAG 2.1.</div></footer>
